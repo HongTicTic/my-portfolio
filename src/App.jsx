@@ -9,7 +9,9 @@ function App() {
     <div className="profile">
       <h1>{name}</h1>
       <p>{goal}</p>
-      <StatusBadge isAvailable={true}/>
+      <StatusBadge isAvailable={false}/>
+      <br/>
+      <a href='https://github.com/HongTicTic/my-portfolio'>Github's repository: https://github.com/HongTicTic/my-portfolio </a>
     </div>
     </>
   )
