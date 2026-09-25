@@ -1,6 +1,6 @@
-import { Card, CardHeader, CardTitle, CardContent } from './ui/Card';
-import Badge from './ui/Badge';
-import { Button } from './ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/Card.jsx';
+import Badge from './ui/Badge.jsx';
+import { Button } from './ui/Button.jsx';
 
 const ProjectCard = ({ title, status, url }) => {
   return (
