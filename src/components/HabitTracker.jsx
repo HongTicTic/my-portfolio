@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/useAuth'
 
 export default function HabitTracker() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [habits, setHabits] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -123,31 +123,18 @@ export default function HabitTracker() {
     }
     setHabits((prev) => prev.filter((h) => h.id !== habitId))
   }
+  
 
   return (
-    <main className="min-h-screen bg-zinc-100 px-4 py-6 text-zinc-950 sm:px-8 sm:py-10">
-      <div className="mx-auto max-w-3xl">
-        <header className="flex flex-col gap-5 border-b border-zinc-300 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-              Daily practice
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Your habits
-            </h1>
-          </div>
-          <div className="flex items-center justify-between gap-4 sm:justify-end">
-            <span className="max-w-48 truncate text-sm text-zinc-500">{user.email}</span>
-            <button
-              onClick={signOut}
-              className="border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-950 hover:text-zinc-950"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
-
-        <section className="mt-8 border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+    <section className="border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="mb-6 border-b border-zinc-200 pb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+          Daily practice
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">
+          Your habits
+        </h2>
+      </div>
           <form onSubmit={handleAdd} className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
@@ -242,8 +229,7 @@ export default function HabitTracker() {
               ))}
             </ul>
           )}
-        </section>
-      </div>
-    </main>
+    </section>
   )
 }
+

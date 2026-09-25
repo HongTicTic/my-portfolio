@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './components/Login'
 import Signup from './components/Signup'
-import HabitTracker from './components/HabitTracker'
+import Dashboard from './components/Dashboard'
 
 export default function App() {
   return (
@@ -16,7 +16,7 @@ export default function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <HabitTracker />
+                <Dashboard />
               </ProtectedRoute>
             }
           />
