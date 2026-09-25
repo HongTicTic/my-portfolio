@@ -10,22 +10,26 @@ import HabitTracker from './HabitTracker'
 export default function Dashboard() {
   return (
     <main className="min-h-screen bg-zinc-100 px-4 py-6 text-zinc-950 sm:px-8 sm:py-10">
-      <div className="mx-auto max-w-3xl space-y-6">
-      <ErrorBoundary label="the nav bar">
-        <Nav />
-      </ErrorBoundary>
+      <div className="mx-auto max-w-5xl space-y-6">
+        <ErrorBoundary label="the nav bar">
+          <Nav />
+        </ErrorBoundary>
 
-      <ErrorBoundary label="the avatar uploader">
-        <AvatarUpload />
-      </ErrorBoundary>
+        <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ErrorBoundary label="the avatar uploader">
+            <AvatarUpload />
+          </ErrorBoundary>
 
-      <ErrorBoundary label="stats">
-        <Stats />
-      </ErrorBoundary>
+          <ErrorBoundary label="stats">
+            <Stats />
+          </ErrorBoundary>
 
-      <ErrorBoundary label="the habit list">
-        <HabitTracker />
-      </ErrorBoundary>
+          <div className="min-w-0 sm:col-span-2">
+            <ErrorBoundary label="the habit list">
+              <HabitTracker />
+            </ErrorBoundary>
+          </div>
+        </div>
       </div>
     </main>
   )

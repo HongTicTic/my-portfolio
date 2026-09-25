@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/useAuth'
 
 export default function HabitTracker() {
   const { user } = useAuth()
+  const cacheKey = `habits-cache-${user.id}`
+  const queueKey = `habits-queue-${user.id}`
   const [habits, setHabits] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -15,33 +17,92 @@ export default function HabitTracker() {
   const [editingName, setEditingName] = useState('')
   const [savingId, setSavingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [syncMessage, setSyncMessage] = useState(null)
+
+  const saveCachedHabits = useCallback((nextHabits) => {
+    localStorage.setItem(cacheKey, JSON.stringify(nextHabits))
+  }, [cacheKey])
+
+  const syncQueuedHabits = useCallback(async () => {
+    const queued = JSON.parse(localStorage.getItem(queueKey) || '[]')
+    if (!queued.length || !navigator.onLine) return
+
+    const remaining = []
+    for (const queuedHabit of queued) {
+      const { data, error: syncError } = await supabase
+        .from('habits')
+        .insert({ name: queuedHabit.name, user_id: user.id, is_active: true })
+        .select()
+        .single()
+
+      if (syncError) {
+        remaining.push(queuedHabit)
+      } else {
+        setHabits((current) => {
+          const next = current.map((habit) =>
+            habit.id === queuedHabit.id ? data : habit,
+          )
+          saveCachedHabits(next)
+          return next
+        })
+      }
+    }
+
+    localStorage.setItem(queueKey, JSON.stringify(remaining))
+    if (!remaining.length) setSyncMessage('Queued habits synced.')
+  }, [queueKey, saveCachedHabits, user.id])
 
   useEffect(() => {
     async function fetchHabits() {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabase
-        .from('habits')
-        .select('*')
-        .order('created_at', { ascending: true })
+      if (!navigator.onLine) {
+        setHabits(JSON.parse(localStorage.getItem(cacheKey) || '[]'))
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.from('habits').select('*').order('created_at', { ascending: true })
 
       if (error) {
         setError(error.message)
       } else {
         setHabits(data)
+        saveCachedHabits(data)
       }
       setLoading(false)
+      syncQueuedHabits()
     }
 
     fetchHabits()
-  }, [])
+    window.addEventListener('online', syncQueuedHabits)
+    return () => window.removeEventListener('online', syncQueuedHabits)
+  }, [cacheKey, queueKey, saveCachedHabits, syncQueuedHabits])
 
   async function handleAdd(e) {
     e.preventDefault()
     if (!newName.trim()) return
     setAdding(true)
     setError(null)
+
+    if (!navigator.onLine) {
+      const queuedHabit = {
+        id: `offline-${crypto.randomUUID()}`,
+        name: newName.trim(),
+        is_active: true,
+        queued: true,
+      }
+      const queued = JSON.parse(localStorage.getItem(queueKey) || '[]')
+      const nextHabits = [...habits, queuedHabit]
+      localStorage.setItem(queueKey, JSON.stringify([...queued, queuedHabit]))
+      setHabits(nextHabits)
+      saveCachedHabits(nextHabits)
+      setNewName('')
+      setAdding(false)
+      setSyncMessage('Saved offline. Will sync when you reconnect.')
+      return
+    }
 
     const { data, error } = await supabase
       .from('habits')
@@ -55,6 +116,7 @@ export default function HabitTracker() {
       return
     }
     setHabits((prev) => [...prev, data])
+    saveCachedHabits([...habits, data])
     setNewName('')
   }
 
@@ -86,6 +148,7 @@ export default function HabitTracker() {
       return
     }
     setHabits((prev) => prev.map((h) => (h.id === habitId ? data : h)))
+    saveCachedHabits(habits.map((habit) => (habit.id === habitId ? data : habit)))
     cancelEdit()
   }
 
@@ -106,6 +169,7 @@ export default function HabitTracker() {
       return
     }
     setHabits((prev) => prev.map((h) => (h.id === habit.id ? data : h)))
+    saveCachedHabits(habits.map((current) => (current.id === habit.id ? data : current)))
   }
 
   async function handleDelete(habitId) {
@@ -122,6 +186,7 @@ export default function HabitTracker() {
       return
     }
     setHabits((prev) => prev.filter((h) => h.id !== habitId))
+    saveCachedHabits(habits.filter((habit) => habit.id !== habitId))
   }
   
 
@@ -155,6 +220,12 @@ export default function HabitTracker() {
           {error && (
             <p className="mt-4 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
+            </p>
+          )}
+
+          {syncMessage && (
+            <p className="mt-4 border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+              {syncMessage}
             </p>
           )}
 
@@ -200,6 +271,9 @@ export default function HabitTracker() {
                     <>
                       <span className="min-w-0 flex-1 wrap-break-word text-sm font-medium text-zinc-900">
                         {habit.name}
+                        {habit.queued && (
+                          <span className="ml-2 text-xs font-normal text-amber-700">Queued</span>
+                        )}
                       </span>
                       <div className="flex flex-wrap gap-2">
                         <button

@@ -4,11 +4,14 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import Dashboard from './components/Dashboard'
+import OfflineBanner from './components/OfflineBanner'
+import UpdateToast from './components/UpdateToast'
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <OfflineBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -22,6 +25,7 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <UpdateToast />
       </BrowserRouter>
     </AuthProvider>
   )
